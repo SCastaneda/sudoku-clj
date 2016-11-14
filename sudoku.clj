@@ -162,45 +162,38 @@
 
 (defn attempt 
   ([board]
-    (attempt board 0 0 1))
-  ([board x y number]
+    (attempt board 0 0))
+  ([board x y]
     (if (= 0 (get-field board x y))
-        (let [att (assoc-in board [x y] number)]
-          (if (and  (is-valid? (get-row att x)) 
-                    (is-valid? (get-col att y)) 
-                    (is-valid? (get-square att x y))
-                )
-              (let [p 
-                (cond 
-                  (and  (= x 8) (= y 8)) att
-                  true  (if  (< y 8) 
-                            (attempt att x (+ y 1) 1)
-                            (attempt att (+ x 1) 0 1)
-                          )
-
-                )]
-                (if (false? p) ;; we're backtracking, try next number
-                  (if (< number 9) 
-                    (recur board x y (+ 1 number))
-                    false ;; failed -- keep backtracking
-                    )
-                  p
-                  )
-                )
-              (if (< number 9) 
-                  (recur board x y (+ 1 number))
-                  false ;; failed, not possible
-                )
-            )
+        ;; get-all-possible
+        (let [poss (get-all-possible board x y)]
+          (attempt board x y poss)
           )
-          (cond 
-            (and (= x 8) (= y 8)) board ;; we're done
-            true (if (< y 8) 
-                  (attempt board x (+ y 1) 1)
-                  (attempt board (+ x 1) 0 1)
-                  )
-            )
-
+        (cond 
+          (and (= x 8) (= y 8)) board ;; we're done
+          true (if (< y 8) 
+                (attempt board x (inc y))
+                (attempt board (inc x) 0)
+                )
+          )
+      )
+    )
+  ([board x y poss]
+    (cond
+      (empty? poss) false
+      (and (= x 8) (= y 8)) (assoc-in board [x y] (first poss)) 
+      true 
+        (let [att (assoc-in board [x y] (first poss))
+              p (if (< y 8) 
+                      (attempt att x (inc y))
+                      (attempt att (inc x) 0)
+                      )
+              ]
+              (if-not p 
+                      (attempt board x y (rest poss))
+                      p 
+                )    
+          )
       )
     )
   )
