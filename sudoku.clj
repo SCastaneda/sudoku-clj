@@ -1,5 +1,8 @@
 (use 'clojure.java.io)
 
+(defn in? [coll elm]  
+  (some #(= elm %) coll)
+  )
 
 (defn get-field [board x y]
   (nth (nth board x) y)
@@ -60,6 +63,17 @@
   (into [] (map #(nth % col-num) board))
   )
 
+(defn get-all-possible [board x y] 
+  (let [poss (range 1 10)] 
+    (filter #(and 
+                (not (in? (get-row board x) %)) 
+                (not (in? (get-col board y) %)) 
+                (not (in? (get-square board x y) %))
+              )
+        poss
+      )
+    )
+  )
 
 (defn is-solvable? [board]
   (let [rows-n-cols 
